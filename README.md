@@ -1,1 +1,1 @@
-# cy-cert-tech
+# cy-cert-tech proposal for digital certification
