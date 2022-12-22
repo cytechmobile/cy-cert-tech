@@ -36,6 +36,12 @@ contract MyToken is ERC721,ERC721URIStorage,  AccessControl, ERC721Burnable {
         super._burn(tokenId);
     }
 
+    function burn(uint256 tokenId) public virtual override(ERC721Burnable) onlyRole(BURNER_ROLE){
+        //solhint-disable-next-line max-line-length
+        // require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        _burn(tokenId);
+    }
+
 
     
     function transferFrom(
