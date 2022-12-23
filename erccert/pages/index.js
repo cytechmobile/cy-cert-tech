@@ -25,11 +25,13 @@ const CyCert = () => {
     const [burnId, setBurnId] = useState(null)
     const [ownerOfId, setOwnerOfToken] = useState('')
     const [ownerOfIdAddress, setOwnerOfTokenAddress] = useState('')
+    const [minterRoleValue, setMinterRoleValue] = useState('')
+    const [burnerRoleValue, setBurnerRoleValue] = useState('')
 
 
     useEffect(() => {
         //this loads asap
-        // if (vmContract && address) getOwner();
+        if (vmContract && address) getMinterBurnerROle();
     })
     const getOwner = async () => {
         // const own = await vmContract.methods.ownerOf().call()
@@ -131,6 +133,14 @@ const CyCert = () => {
         setOwnerOfTokenAddress(ownerOfToken);
     }
 
+
+    const getMinterBurnerROle = async () => {
+        const minterRoleValue = await vmContract.methods.MINTER_ROLE().call()
+        const burnerRoleValue = await vmContract.methods.BURNER_ROLE().call()
+        setMinterRoleValue(minterRoleValue);
+        setBurnerRoleValue(burnerRoleValue);
+    }
+
     const connectWalletHandler = async () => {
         if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
             try {
@@ -170,6 +180,10 @@ const CyCert = () => {
                             <div className="container">
                                 <h2>Balance of Address: {bal} (CCT)</h2>
                             </div>
+                            <div className="container">
+                                <h3>Minter Role Value: {minterRoleValue}</h3>
+                                <h3>Burner Role Value: {burnerRoleValue}</h3>
+                            </div>
                         </section>
 
                         <button onClick={connectWalletHandler} className="button is-primary mt-1">Connect Wallet
@@ -186,7 +200,6 @@ const CyCert = () => {
                                 <b>CyCertToken Issuer</b>
                             </div>
                         </div>
-
                         <section>
                             <input onChange={updateMintAddress} className="input is-primary mt-4" type="type"
                                    placeholder="Address"/>
