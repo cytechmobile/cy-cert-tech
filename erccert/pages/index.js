@@ -6,6 +6,10 @@ import configuration from '/build/contracts/CyCertToken.json';
 
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
 
+let mintedAddress = [];
+let tokensAtAddress = [[],[]];
+let newTokenId = 0;
+
 const CyCert = () => {
     const CONTRACT_ADDRESS = configuration.networks['5777'].address;
     const CONTRACT_ABI = configuration.abi;
@@ -13,10 +17,10 @@ const CyCert = () => {
 
     const [error, setError] = useState('')
     const [bal, setBalance] = useState('')
-    const [addRole,setAddRole] = useState('')
-    const [addAddress,setAddAddress] = useState('')
-    const [removeRole,setRemoveRole] = useState('')
-    const [removeAddress,setRemoveAddress] = useState('')
+    const [addRole, setAddRole] = useState('')
+    const [addAddress, setAddAddress] = useState('')
+    const [removeRole, setRemoveRole] = useState('')
+    const [removeAddress, setRemoveAddress] = useState('')
     const [web3, setWeb3] = useState(null)
     const [address, setAddress] = useState(null)
     const [vmContract, setVmContract] = useState(null)
@@ -27,20 +31,24 @@ const CyCert = () => {
     const [ownerOfIdAddress, setOwnerOfTokenAddress] = useState('')
     const [minterRoleValue, setMinterRoleValue] = useState('')
     const [burnerRoleValue, setBurnerRoleValue] = useState('')
-
+    const [allTokensByAddress, setAllTokensByAddress] = useState('')
+    const [allTokensArray, setAllTokensArray] = useState('')
 
     useEffect(() => {
         //this loads asap
         if (vmContract && address) getMinterBurnerROle();
+        if (vmContract && address) getBalance();
     })
-    const getOwner = async () => {
-        // const own = await vmContract.methods.ownerOf().call()
-        // setOwner(own)
+    const getTokenIdFromAddress = async () => {
+        setAllTokensArray(tokensAtAddress[mintedAddress.indexOf(allTokensByAddress)])
+    }
+    const getAllTokensByAddress = event => {
+        setAllTokensByAddress(event.target.value)
     }
 
     const getBalance = async () => {
         const bal = await vmContract.methods.balanceOf(address).call()
-        setBalance(web3.utils.fromWei(String(bal), 'ether'))
+        setBalance(web3.utils.fromWei(String(bal), 'wei'))
     }
 
     const updateMintAddress = event => {
@@ -50,16 +58,23 @@ const CyCert = () => {
         setMintUri(event.target.value)
     }
     const mintTokenToAddress = async () => {
-        console.log("mint to address :" , mintAddress)
-        const mintToAddress = await vmContract.methods.safeMint(mintAddress,mintUri).send({
-            from:address,
-            value:web3.utils.toWei("0",'ether'),
-            gas:300000,
-            gasPrice:200000000
+        console.log("mint to address :", mintAddress)
+        const mintToAddress = await vmContract.methods.safeMint(mintAddress, mintUri).send({
+            from: address,
+            value: web3.utils.toWei("0", 'ether'),
+            gas: 300000,
+            gasPrice: 200000000
         }).then((res) => {
-            console.log("Success", res)
+            mintedAddress.indexOf(mintAddress) === -1 ? mintedAddress.push(mintAddress) : console.log("This address already exists");
+            tokensAtAddress[mintedAddress.indexOf(mintAddress)].push(newTokenId)
+
+            console.log("got result :",res)
+            console.log("owners :", mintedAddress)
+            console.log("tokens :", tokensAtAddress)
+
+            newTokenId++;
         }).catch(e => {
-            console.log("got exception: ",e);
+            console.log("got exception: ", e);
         });
     }
 
@@ -67,16 +82,27 @@ const CyCert = () => {
         setBurnId(event.target.value)
     }
     const burnToken = async () => {
-        console.log("burning token with ID :" , burnId)
+        console.log("burning token with ID :", burnId)
         const burnToken = await vmContract.methods.burn(burnId).send({
-            from:address,
-            value:web3.utils.toWei("0",'ether'),
-            gas:300000,
-            gasPrice:200000000
+            from: address,
+            value: web3.utils.toWei("0", 'ether'),
+            gas: 300000,
+            gasPrice: 200000000
         }).then((res) => {
             console.log("Success", res)
+
+            console.log("searching ID: ",burnId)
+            let row = tokensAtAddress.findIndex(row => row.includes(parseInt(burnId)));
+            let col = tokensAtAddress[row].indexOf(parseInt(burnId));
+            tokensAtAddress[row].splice(col,1);
+
+            //TODO completely remove address if no token is left
+
+            console.log("owners :", mintedAddress)
+            console.log("tokens :", tokensAtAddress)
+
         }).catch(e => {
-            console.log("got exception: ",e);
+            console.log("got exception: ", e);
         });
     }
 
@@ -87,18 +113,18 @@ const CyCert = () => {
         setAddAddress(event.target.value)
     }
     const addRoleToAddress = async () => {
-          console.log("role :" , addRole)
-          console.log("to address :" , addAddress)
-          const addRoleToAddress = await vmContract.methods.grantRole(addRole,addAddress).send({
-            from:address,
-            value:web3.utils.toWei("0",'ether'),
-            gas:300000,
-            gasPrice:200000000
-          }).then((res) => {
+        console.log("role :", addRole)
+        console.log("to address :", addAddress)
+        const addRoleToAddress = await vmContract.methods.grantRole(addRole, addAddress).send({
+            from: address,
+            value: web3.utils.toWei("0", 'ether'),
+            gas: 300000,
+            gasPrice: 200000000
+        }).then((res) => {
             console.log("Success", res)
-          }).catch(e => {
-            console.log("got exception: ",e);
-          });
+        }).catch(e => {
+            console.log("got exception: ", e);
+        });
     }
     const updateRemoveRole = event => {
         setRemoveRole(event.target.value)
@@ -108,17 +134,17 @@ const CyCert = () => {
     }
 
     const removeRoleFromAddress = async () => {
-        console.log("role :" , removeRole)
-        console.log("to address :" , removeAddress)
-        const removeRoleFromAddress = await vmContract.methods.revokeRole(removeRole,removeAddress).send({
-            from:address,
-            value:web3.utils.toWei("0",'ether'),
-            gas:300000,
-            gasPrice:200000000
+        console.log("role :", removeRole)
+        console.log("to address :", removeAddress)
+        const removeRoleFromAddress = await vmContract.methods.revokeRole(removeRole, removeAddress).send({
+            from: address,
+            value: web3.utils.toWei("0", 'ether'),
+            gas: 300000,
+            gasPrice: 200000000
         }).then((res) => {
             console.log("Success", res)
         }).catch(e => {
-            console.log("got exception: ",e);
+            console.log("got exception: ", e);
         });
     }
 
@@ -127,7 +153,7 @@ const CyCert = () => {
     }
 
     const ownerOfToken = async () => {
-        console.log("Owner of token with ID :" , ownerOfId)
+        console.log("Owner of token with ID :", ownerOfId)
         setOwnerOfTokenAddress(0);
         const ownerOfToken = await vmContract.methods.ownerOf(ownerOfId).call()
         setOwnerOfTokenAddress(ownerOfToken);
@@ -163,7 +189,7 @@ const CyCert = () => {
     }
 
     return (
-        <div>
+        <div className="container">
             <Head>
                 <title>
                     CyCertToken
@@ -171,103 +197,113 @@ const CyCert = () => {
                 <meta name="description" content="A Blockchain Certificates App"/>
             </Head>
             <div className="split left">
-                <div className="content">
-                    <div className="centered">
-                        <section>
-                            <div className="container">
-                                <h2>Connected metamask address: {address}</h2>
-                            </div>
-                            <div className="container">
-                                <h2>Balance of Address: {bal} (CCT)</h2>
-                            </div>
-                            <div className="container">
-                                <h3>Minter Role Value: {minterRoleValue}</h3>
-                                <h3>Burner Role Value: {burnerRoleValue}</h3>
-                            </div>
-                        </section>
-
+                <section>
+                        <h3>Connected metamask address: {address} / Balance of Address: {bal} (CCT)</h3>
+                        <h3></h3>
+                        <h3>Minter Role Value: {minterRoleValue}</h3>
+                        <h3>Burner Role Value: {burnerRoleValue}</h3>
+                        <div>
                         <button onClick={connectWalletHandler} className="button is-primary mt-1">Connect Wallet
                         </button>
-                        <section>
-                            <button
-                                onClick={getBalance}
-                                className="button is-primary mt-1"
-                            >get Balance of Connected Address
-                            </button>
-                        </section>
-                        <div>
-                            <div>
-                                <b>CyCertToken Issuer</b>
-                            </div>
+                        <button onClick={getBalance} className="button is-primary mt-1 m-1">get Balance of Connected Address
+                        </button>
                         </div>
-                        <section>
-                            <input onChange={updateMintAddress} className="input is-primary mt-4" type="type"
-                                   placeholder="Address"/>
-                            <input onChange={updateMintUri} className="input is-primary mt-1" type="type"
-                                   placeholder="Uri"/>
-                            <button
-                                onClick={mintTokenToAddress}
-                                className="button is-primary mt-1"
-                            >Mint Token to Address
-                            </button>
-                        </section>
+                </section>
 
 
-                        <section>
-                            <input onChange={updateBurnId} className="input is-primary mt-4" type="type"
-                                   placeholder="Token ID"/>
-                            <button
-                                onClick={burnToken}
-                                className="button is-primary mt-1"
-                            >Burn Token
-                            </button>
-                        </section>
+                <section>
 
-                        <section>
-                            <input onChange={updateAddRole} className="input is-primary mt-4" type="type"
-                                   placeholder="Role"/>
-                            <input onChange={updateAddAddress} className="input is-primary mt-1" type="type"
-                                   placeholder="Address"/>
-                            <button
-                                onClick={addRoleToAddress}
-                                className="button is-primary mt-1"
-                            >Add Role to Address
-                            </button>
-                        </section>
-                        <div>
-                            <section>
-                                <input onChange={updateRemoveRole} className="input is-primary mt-4" type="type"
-                                       placeholder="Role"/>
-                                <input onChange={updateRemoveAddress} className="input is-primary mt-1" type="type"
-                                       placeholder="Address"/>
-                                <button
-                                    onClick={removeRoleFromAddress}
-                                    className="button is-primary mt-1"
-                                >Revoke Role from Address
-                                </button>
-                            </section>
-                        </div>
-                        <div>
-                            <section>
-                                <input onChange={updateOwnerOfToken} className="input is-primary mt-4" type="type"
-                                       placeholder="Token ID"/>
-
-                                <button
-                                    onClick={ownerOfToken}
-                                    className="button is-primary mt-1"
-                                >Owner Of Token :
-                                </button><div> {ownerOfIdAddress}</div>
-                            </section>
-                        </div>
-                        <section>
-                            <div className="container has-text-danger">
-                                <p>{error}</p>
-                            </div>
-                        </section>
+                </section>
+                <div>
+                    <div>
+                        <b>CyCertToken Issuer</b>
                     </div>
+                </div>
+                <section>
+                    <input onChange={updateMintAddress} className="input is-primary mt-4" type="type"
+                           placeholder="Address"/>
+                    <input onChange={updateMintUri} className="input is-primary mt-1" type="type"
+                           placeholder="Uri"/>
+                    <button
+                        onClick={mintTokenToAddress}
+                        className="button is-primary mt-1"
+                    >Mint Token to Address
+                    </button>
+                </section>
+
+
+                <section>
+                    <input onChange={updateBurnId} className="input is-primary mt-4" type="type"
+                           placeholder="Token ID"/>
+                    <button
+                        onClick={burnToken}
+                        className="button is-primary mt-1"
+                    >Burn Token
+                    </button>
+                </section>
+
+                <section>
+                    <input onChange={updateAddRole} className="input is-primary mt-4" type="type"
+                           placeholder="Role"/>
+                    <input onChange={updateAddAddress} className="input is-primary mt-1" type="type"
+                           placeholder="Address"/>
+                    <button
+                        onClick={addRoleToAddress}
+                        className="button is-primary mt-1"
+                    >Add Role to Address
+                    </button>
+                </section>
+                <div>
+                    <section>
+                        <input onChange={updateRemoveRole} className="input is-primary mt-4" type="type"
+                               placeholder="Role"/>
+                        <input onChange={updateRemoveAddress} className="input is-primary mt-1" type="type"
+                               placeholder="Address"/>
+                        <button
+                            onClick={removeRoleFromAddress}
+                            className="button is-primary mt-1"
+                        >Revoke Role from Address
+                        </button>
+                    </section>
+                </div>
+                <div>
+                    <section>
+                        <input onChange={updateOwnerOfToken} className="input is-primary mt-4" type="type"
+                               placeholder="Token ID"/>
+
+                        <button
+                            onClick={ownerOfToken}
+                            className="button is-primary mt-1"
+                        >Owner Of Token :
+                        </button>
+                        <div> {ownerOfIdAddress}</div>
+                    </section>
                 </div>
 
             </div>
+            <div className="split right mt-2">
+
+                    <div>
+                        <b>CyCertToken Verifier</b>
+                    </div>
+
+                <section>
+                    <input onChange={getAllTokensByAddress} className="input is-primary mt-4" type="type"
+                           placeholder="Address"/>
+                    <button
+                        onClick={getTokenIdFromAddress}
+                        className="button is-primary mt-1"
+                    >Get TokenID from Address
+                    </button>
+                    <div> {allTokensArray}</div>
+                </section>
+
+            </div>
+            <section>
+                <div className="container has-text-danger">
+                    <p>{error}</p>
+                </div>
+            </section>
         </div>
     )
 }
