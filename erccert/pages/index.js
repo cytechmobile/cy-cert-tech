@@ -36,12 +36,46 @@ const CyCert = () => {
 
     useEffect(() => {
         //this loads asap
+        //get data from db
         if (vmContract && address) getMinterBurnerROle();
         if (vmContract && address) getBalance();
     })
     const getTokenIdFromAddress = async () => {
         setAllTokensArray(tokensAtAddress[mintedAddress.indexOf(allTokensByAddress)])
+        console.log(allTokensArray)
+        alert(allTokensArray);
+        var specificToken=prompt("Please enter your specific Token ID","");
+        setOwnerOfToken(parseInt(specificToken))
+        if (specificToken!=null && (allTokensArray.toString()).indexOf(specificToken.toString()) >= 0)
+        {
+
+            await ownerOfToken();
+            if (address.localeCompare(ownerOfIdAddress, undefined, { sensitivity: 'base' }) === 0){
+                const URI = await vmContract.methods.tokenURI(specificToken).call()
+                //alert('TokenURI is: '+URI);
+                // if (window.confirm('If you click "ok" you would be redirected . Cancel will load this website '))
+                // {
+                //     window.location.href=URI;
+                // };
+                console.log(URI); // ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/101
+
+                const ipfsURL = addIPFSProxy(URI);
+
+                const request = new Request(ipfsURL);
+                const response = await fetch(request);
+                const metadata = await response.json();
+                console.log(metadata); // Metadata in JSON
+            }
+        }
     }
+    function addIPFSProxy(ipfsHash) {
+        const URL = "https://cycert.infura-ipfs.io/ipfs/"
+        const hash = ipfsHash.replace(/^ipfs?:\/\//, '')
+        const ipfsURL = URL + hash
+        console.log(ipfsURL)
+        return ipfsURL
+    }
+
     const getAllTokensByAddress = event => {
         setAllTokensByAddress(event.target.value)
     }
@@ -55,11 +89,41 @@ const CyCert = () => {
         setMintAddress(event.target.value)
     }
     const updateMintUri = event => {
-        setMintUri(event.target.value)
+        //setMintUri(event.target.value)
+    }
+
+    const createTokenImageAndMetadata = async () =>{
+        const https = require('https');
+
+        const projectId = '2JscfK1XHZIfaK352hUbNX8MapQ';
+        const projectSecret = 'c933f0da8b643f9b29adbfc6ad779279';
+
+
+        const options = {
+            host: 'ipfs.infura.io',
+            port: 5001,
+            path: '/api/v0/pin/add?arg=QmXoAUJfiduHHDNsrCM6od913wRdDdBCzWMnsKRxY6w9Gx',
+            method: 'POST',
+            auth: projectId + ':' + projectSecret,
+        };
+
+        let req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', function (chunk) {
+                body += chunk;
+            });
+            res.on('end', function () {
+                console.log(body);
+            });
+        });
+        req.end();
     }
     const mintTokenToAddress = async () => {
         console.log("mint to address :", mintAddress)
-        const mintToAddress = await vmContract.methods.safeMint(mintAddress, mintUri).send({
+        createTokenImageAndMetadata();
+        //setMintUri('QmNRU6xPgDQqyCcoUBg2xDe4C4f8XTz9kckE3DUx4ZgeDt')
+
+        const mintToAddress = await vmContract.methods.safeMint(mintAddress, 'QmXoAUJfiduHHDNsrCM6od913wRdDdBCzWMnsKRxY6w9Gx').send({
             from: address,
             value: web3.utils.toWei("0", 'ether'),
             gas: 300000,
@@ -154,7 +218,7 @@ const CyCert = () => {
 
     const ownerOfToken = async () => {
         console.log("Owner of token with ID :", ownerOfId)
-        setOwnerOfTokenAddress(0);
+        //setOwnerOfTokenAddress(0);
         const ownerOfToken = await vmContract.methods.ownerOf(ownerOfId).call()
         setOwnerOfTokenAddress(ownerOfToken);
     }
@@ -222,8 +286,8 @@ const CyCert = () => {
                 <section>
                     <input onChange={updateMintAddress} className="input is-primary mt-4" type="type"
                            placeholder="Address"/>
-                    <input onChange={updateMintUri} className="input is-primary mt-1" type="type"
-                           placeholder="Uri"/>
+                    {/*<input onChange={updateMintUri} className="input is-primary mt-1" type="type"*/}
+                    {/*       placeholder="Uri"/>*/}
                     <button
                         onClick={mintTokenToAddress}
                         className="button is-primary mt-1"
