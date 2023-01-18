@@ -8,9 +8,6 @@ import axios from 'axios';
 
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
 
-let mintedAddress = [];
-let tokensAtAddress = [[],[]];
-let newTokenId = 0;
 
 const CyCert = () => {
     const CONTRACT_ADDRESS = configuration.networks['5777'].address;
@@ -91,16 +88,7 @@ const CyCert = () => {
             gas: 300000,
             gasPrice: 200000000
         }).then(async (res) => {
-            // mintedAddress.indexOf(mintAddress) === -1 ? mintedAddress.push(mintAddress) : console.log("This address already exists");
-            // tokensAtAddress[mintedAddress.indexOf(mintAddress)].push(newTokenId)
-            //
-            // console.log("got result :",res)
-            // console.log("owners :", mintedAddress)
-            // console.log("tokens :", tokensAtAddress)
-            //
-            // newTokenId++;
 
-            //console.log(value)
             let data={'address': mintAddress, 'mintUri':'QmXoAUJfiduHHDNsrCM6od913wRdDdBCzWMnsKRxY6w9Gx'}
             axios.post('/api/sendpost', data)
                 .then((response) => {

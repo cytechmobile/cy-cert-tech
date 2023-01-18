@@ -7,9 +7,6 @@ import axios, {all} from "axios";
 
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
 
-let mintedAddress = [];
-let tokensAtAddress = [[],[]];
-let newTokenId = 0;
 
 const CyCert = () => {
     const CONTRACT_ADDRESS = configuration.networks['5777'].address;
@@ -23,7 +20,6 @@ const CyCert = () => {
     const [ownerOfId, setOwnerOfToken] = useState('')
     const [ownerOfIdAddress, setOwnerOfTokenAddress] = useState('')
     const [allTokensByAddress, setAllTokensByAddress] = useState('')
-    const [allTokensArray, setAllTokensArray] = useState('')
     const [allTokensAtAddress, setAllTokensAtAddress] = useState([]);
 
 
