@@ -90,7 +90,7 @@ const CyCert = () => {
         }).then(async (res) => {
 
             let data={'address': mintAddress, 'mintUri':'QmXoAUJfiduHHDNsrCM6od913wRdDdBCzWMnsKRxY6w9Gx'}
-            axios.post('/api/sendpost', data)
+            axios.post('/api/mintToken', data)
                 .then((response) => {
                     console.log(response)
                 })
@@ -113,17 +113,14 @@ const CyCert = () => {
             gas: 300000,
             gasPrice: 200000000
         }).then((res) => {
-            console.log("Success", res)
 
-            console.log("searching ID: ",burnId)
-            let row = tokensAtAddress.findIndex(row => row.includes(parseInt(burnId)));
-            let col = tokensAtAddress[row].indexOf(parseInt(burnId));
-            tokensAtAddress[row].splice(col,1);
-
-            //TODO completely remove address if no token is left
-
-            console.log("owners :", mintedAddress)
-            console.log("tokens :", tokensAtAddress)
+            let data={'tokenId': burnId}
+            axios.post('/api/burnToken', data)
+                .then((response) => {
+                    console.log(response)
+                })
+                .catch((e) => { console.log(e)}
+                )
 
         }).catch(e => {
             console.log("got exception: ", e);

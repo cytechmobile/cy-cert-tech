@@ -8,6 +8,7 @@ export default async (req, res) => {
             query,
             values
         );
+        res.status(200).json({ result })
     } catch ( error ) {
         console.log( error );
     }
