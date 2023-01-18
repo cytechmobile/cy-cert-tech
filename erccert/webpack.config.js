@@ -4,7 +4,7 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 module.exports = {
-    entry: "./src/index.js",
+    entry: "./src/issuer.js",
     output: {
         filename: "bundle.[hash].js",
         path: path.resolve(__dirname, "dist"),
@@ -22,6 +22,11 @@ module.exports = {
     resolve: {
         modules: [__dirname, "src", "node_modules"],
         extensions: ["*", ".js", ".jsx", ".tsx", ".ts", ".scss"],
+        fallback: {
+            "fs": false,
+            "os": false,
+            "path": false,
+        }
     },
     module: {
         rules: [

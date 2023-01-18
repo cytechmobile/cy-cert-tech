@@ -3,6 +3,8 @@ import Web3 from 'web3';
 import {useEffect, useState} from "react";
 import 'bulma/css/bulma.css'
 import configuration from '/build/contracts/CyCertToken.json';
+import axios from 'axios';
+
 
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
 
@@ -17,22 +19,13 @@ const CyCert = () => {
 
     const [error, setError] = useState('')
     const [bal, setBalance] = useState('')
-    const [addRole, setAddRole] = useState('')
-    const [addAddress, setAddAddress] = useState('')
-    const [removeRole, setRemoveRole] = useState('')
-    const [removeAddress, setRemoveAddress] = useState('')
     const [web3, setWeb3] = useState(null)
     const [address, setAddress] = useState(null)
     const [vmContract, setVmContract] = useState(null)
     const [mintAddress, setMintAddress] = useState(null)
-    const [mintUri, setMintUri] = useState('')
     const [burnId, setBurnId] = useState(null)
-    const [ownerOfId, setOwnerOfToken] = useState('')
-    const [ownerOfIdAddress, setOwnerOfTokenAddress] = useState('')
     const [minterRoleValue, setMinterRoleValue] = useState('')
     const [burnerRoleValue, setBurnerRoleValue] = useState('')
-    const [allTokensByAddress, setAllTokensByAddress] = useState('')
-    const [allTokensArray, setAllTokensArray] = useState('')
 
     useEffect(() => {
         //this loads asap
@@ -40,44 +33,13 @@ const CyCert = () => {
         if (vmContract && address) getMinterBurnerROle();
         if (vmContract && address) getBalance();
     })
-    const getTokenIdFromAddress = async () => {
-        setAllTokensArray(tokensAtAddress[mintedAddress.indexOf(allTokensByAddress)])
-        console.log(allTokensArray)
-        alert(allTokensArray);
-        var specificToken=prompt("Please enter your specific Token ID","");
-        setOwnerOfToken(parseInt(specificToken))
-        if (specificToken!=null && (allTokensArray.toString()).indexOf(specificToken.toString()) >= 0)
-        {
 
-            await ownerOfToken();
-            if (address.localeCompare(ownerOfIdAddress, undefined, { sensitivity: 'base' }) === 0){
-                const URI = await vmContract.methods.tokenURI(specificToken).call()
-                //alert('TokenURI is: '+URI);
-                // if (window.confirm('If you click "ok" you would be redirected . Cancel will load this website '))
-                // {
-                //     window.location.href=URI;
-                // };
-                console.log(URI); // ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/101
-
-                const ipfsURL = addIPFSProxy(URI);
-
-                const request = new Request(ipfsURL);
-                const response = await fetch(request);
-                const metadata = await response.json();
-                console.log(metadata); // Metadata in JSON
-            }
-        }
-    }
     function addIPFSProxy(ipfsHash) {
         const URL = "https://cycert.infura-ipfs.io/ipfs/"
         const hash = ipfsHash.replace(/^ipfs?:\/\//, '')
         const ipfsURL = URL + hash
         console.log(ipfsURL)
         return ipfsURL
-    }
-
-    const getAllTokensByAddress = event => {
-        setAllTokensByAddress(event.target.value)
     }
 
     const getBalance = async () => {
@@ -128,15 +90,25 @@ const CyCert = () => {
             value: web3.utils.toWei("0", 'ether'),
             gas: 300000,
             gasPrice: 200000000
-        }).then((res) => {
-            mintedAddress.indexOf(mintAddress) === -1 ? mintedAddress.push(mintAddress) : console.log("This address already exists");
-            tokensAtAddress[mintedAddress.indexOf(mintAddress)].push(newTokenId)
+        }).then(async (res) => {
+            // mintedAddress.indexOf(mintAddress) === -1 ? mintedAddress.push(mintAddress) : console.log("This address already exists");
+            // tokensAtAddress[mintedAddress.indexOf(mintAddress)].push(newTokenId)
+            //
+            // console.log("got result :",res)
+            // console.log("owners :", mintedAddress)
+            // console.log("tokens :", tokensAtAddress)
+            //
+            // newTokenId++;
 
-            console.log("got result :",res)
-            console.log("owners :", mintedAddress)
-            console.log("tokens :", tokensAtAddress)
+            //console.log(value)
+            let data={'address': mintAddress, 'mintUri':'QmXoAUJfiduHHDNsrCM6od913wRdDdBCzWMnsKRxY6w9Gx'}
+            axios.post('/api/sendpost', data)
+                .then((response) => {
+                    console.log(response)
+                })
+                .catch((e) => { console.log(e)}
+                )
 
-            newTokenId++;
         }).catch(e => {
             console.log("got exception: ", e);
         });
@@ -169,60 +141,6 @@ const CyCert = () => {
             console.log("got exception: ", e);
         });
     }
-
-    const updateAddRole = event => {
-        setAddRole(event.target.value)
-    }
-    const updateAddAddress = event => {
-        setAddAddress(event.target.value)
-    }
-    const addRoleToAddress = async () => {
-        console.log("role :", addRole)
-        console.log("to address :", addAddress)
-        const addRoleToAddress = await vmContract.methods.grantRole(addRole, addAddress).send({
-            from: address,
-            value: web3.utils.toWei("0", 'ether'),
-            gas: 300000,
-            gasPrice: 200000000
-        }).then((res) => {
-            console.log("Success", res)
-        }).catch(e => {
-            console.log("got exception: ", e);
-        });
-    }
-    const updateRemoveRole = event => {
-        setRemoveRole(event.target.value)
-    }
-    const updateRemoveAddress = event => {
-        setRemoveAddress(event.target.value)
-    }
-
-    const removeRoleFromAddress = async () => {
-        console.log("role :", removeRole)
-        console.log("to address :", removeAddress)
-        const removeRoleFromAddress = await vmContract.methods.revokeRole(removeRole, removeAddress).send({
-            from: address,
-            value: web3.utils.toWei("0", 'ether'),
-            gas: 300000,
-            gasPrice: 200000000
-        }).then((res) => {
-            console.log("Success", res)
-        }).catch(e => {
-            console.log("got exception: ", e);
-        });
-    }
-
-    const updateOwnerOfToken = event => {
-        setOwnerOfToken(event.target.value)
-    }
-
-    const ownerOfToken = async () => {
-        console.log("Owner of token with ID :", ownerOfId)
-        //setOwnerOfTokenAddress(0);
-        const ownerOfToken = await vmContract.methods.ownerOf(ownerOfId).call()
-        setOwnerOfTokenAddress(ownerOfToken);
-    }
-
 
     const getMinterBurnerROle = async () => {
         const minterRoleValue = await vmContract.methods.MINTER_ROLE().call()
@@ -306,68 +224,7 @@ const CyCert = () => {
                     </button>
                 </section>
 
-                <section>
-                    <input onChange={updateAddRole} className="input is-primary mt-4" type="type"
-                           placeholder="Role"/>
-                    <input onChange={updateAddAddress} className="input is-primary mt-1" type="type"
-                           placeholder="Address"/>
-                    <button
-                        onClick={addRoleToAddress}
-                        className="button is-primary mt-1"
-                    >Add Role to Address
-                    </button>
-                </section>
-                <div>
-                    <section>
-                        <input onChange={updateRemoveRole} className="input is-primary mt-4" type="type"
-                               placeholder="Role"/>
-                        <input onChange={updateRemoveAddress} className="input is-primary mt-1" type="type"
-                               placeholder="Address"/>
-                        <button
-                            onClick={removeRoleFromAddress}
-                            className="button is-primary mt-1"
-                        >Revoke Role from Address
-                        </button>
-                    </section>
-                </div>
-                <div>
-                    <section>
-                        <input onChange={updateOwnerOfToken} className="input is-primary mt-4" type="type"
-                               placeholder="Token ID"/>
-
-                        <button
-                            onClick={ownerOfToken}
-                            className="button is-primary mt-1"
-                        >Owner Of Token :
-                        </button>
-                        <div> {ownerOfIdAddress}</div>
-                    </section>
-                </div>
-
             </div>
-            <div className="split right mt-2">
-
-                    <div>
-                        <b>CyCertToken Verifier</b>
-                    </div>
-
-                <section>
-                    <input onChange={getAllTokensByAddress} className="input is-primary mt-4" type="type"
-                           placeholder="Address"/>
-                    <button
-                        onClick={getTokenIdFromAddress}
-                        className="button is-primary mt-1"
-                    >Get TokenID from Address
-                    </button>
-                    <div> {allTokensArray}</div>
-                </section>
-
-            </div>
-            <section>
-                <div className="container has-text-danger">
-                    <p>{error}</p>
-                </div>
-            </section>
         </div>
     )
 }
