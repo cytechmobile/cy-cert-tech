@@ -5,6 +5,23 @@ import 'bulma/css/bulma.css'
 import configuration from '/build/contracts/CyCertToken.json';
 import axios, {all} from "axios";
 
+import { Network, Alchemy } from 'alchemy-sdk';
+
+const settings = {
+    apiKey: "uq6bEba92Cs0OhuH8bAdJJIidf0FLM3f",
+    network: Network.ETH_MAINNET,
+};
+
+const alchemy = new Alchemy(settings);
+
+
+// Get all outbound transfers for a provided address
+alchemy.core
+    .getTokenBalances('0xE838E0188F0a61B74b85b4b764b2485B644CD3f8')
+    .then(console.log);
+
+
+
 Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
 
 
@@ -32,12 +49,14 @@ const CyCert = () => {
         console.log(allTokensByAddress)
         let data={'address': allTokensByAddress}
         let response = await axios.post('/api/getTokensByAddress', data)
-            .then((response) => {
+            .then(async (response) => {
                 setAllTokensAtAddress(response.data.result.rows)
+                // Get all the NFTs owned by an address
+                const nfts = await alchemy.nft.getNftsForOwner("0xshah.eth");
+                console.log(nfts)
             })
             .catch((e) => { console.log(e)}
             )
-
     }
 
 
