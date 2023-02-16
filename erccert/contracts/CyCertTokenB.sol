@@ -3,20 +3,10 @@ pragma solidity ^0.8.4;
 
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
-    //Constants
-    // Mask of an entry in packed address data.
-    uint256 private constant _BITMASK_ADDRESS_DATA_ENTRY = (1 << 64) - 1;
-    // The bit position of `numberMinted` in packed address data.
-    uint256 private constant _BITPOS_NUMBER_MINTED = 64;
-    // The bit position of `numberBurned` in packed address data.
-    uint256 private constant _BITPOS_NUMBER_BURNED = 128;
-
-
+contract CyCertTokenB is ERC721, AccessControl {
 
     //Variables
     using Counters for Counters.Counter;
@@ -24,33 +14,7 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
 
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
-
-    // The next token ID to be minted.
-    uint256 private _currentIndex;
-
-    // The number of tokens burned.
-    uint256 private _burnCounter;
-
-    // Mapping from token ID to ownership details
-    // An empty struct value does not necessarily mean the token is unowned.
-    // See {_packedOwnershipOf} implementation for details.
-    //
-    // Bits Layout:
-    // - [0..159]   `addr`
-    // - [160..223] `startTimestamp`
-    // - [224]      `burned`
-    // - [225]      `nextInitialized`
-    // - [232..255] `extraData`
-    mapping(uint256 => uint256) private _packedOwnerships;
-
-    // Mapping owner address to address data.
-    //
-    // Bits Layout:
-    // - [0..63]    `balance`
-    // - [64..127]  `numberMinted`
-    // - [128..191] `numberBurned`
-    // - [192..255] `aux`
-    mapping(address => uint256) private _packedAddressData;
+    mapping (address => uint256[]) private _tokensMinted;
 
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -62,6 +26,20 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(BURNER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+    }
+
+
+    function safeMint(address to, string memory uri) public onlyRole(MINTER_ROLE) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
+        // Add the token ID to the recipient's list of tokens
+        _tokensMinted[to].push(tokenId);
+    }
+
+    function getTokensMinted(address recipient) public view returns (uint256[] memory) {
+        return _tokensMinted[recipient];
     }
 
     /**
@@ -98,18 +76,23 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
     }
 
 
+    function burn(address recipient, uint256 tokenId) public virtual onlyRole(BURNER_ROLE){
+        uint256[] storage tokens = _tokensMinted[recipient];
+        uint256 tokenIndex = tokens.length;
 
-    function safeMint(address to, string memory uri) public onlyRole(MINTER_ROLE) {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-    }
-
-    // The following functions are overrides required by Solidity.
-
-
-    function burn(uint256 tokenId) public virtual onlyRole(BURNER_ROLE){
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == tokenId) {
+                tokenIndex = i;
+                break;
+            }
+        }
+        // If the token ID is not found, revert the transaction
+        require(tokenIndex < tokens.length, "Token not found");
+        // Delete the token ID from the recipient's list of tokens
+        if (tokenIndex < tokens.length - 1) {
+            tokens[tokenIndex] = tokens[tokens.length - 1];
+        }
+        tokens.pop();
         _burn(tokenId);
     }
 
@@ -132,7 +115,7 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override(ERC721,IERC721) {
+    ) public virtual override(ERC721) {
 
     }
 
@@ -141,7 +124,7 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override(ERC721,IERC721) {
+    ) public virtual override(ERC721) {
 
     }
 
@@ -151,24 +134,24 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public virtual override(ERC721,IERC721) {
+    ) public virtual override(ERC721) {
 
     }
 
-    function approve(address to, uint256 tokenId) public virtual override(ERC721,IERC721) {
+    function approve(address to, uint256 tokenId) public virtual override(ERC721) {
 
     }
 
-    function getApproved(uint256 tokenId) public view virtual override(ERC721,IERC721) returns (address) {
+    function getApproved(uint256 tokenId) public view virtual override(ERC721) returns (address) {
 
     }
 
 
-    function setApprovalForAll(address operator, bool approved) public virtual override(ERC721,IERC721) {
+    function setApprovalForAll(address operator, bool approved) public virtual override(ERC721) {
 
     }
 
-    function isApprovedForAll(address owner, address operator) public view virtual override(ERC721,IERC721) returns (bool) {
+    function isApprovedForAll(address owner, address operator) public view virtual override(ERC721) returns (bool) {
 
     }
 
@@ -177,93 +160,16 @@ contract CyCertTokenB is ERC721, ERC721Enumerable, AccessControl {
         address to,
         uint256, /* firstTokenId */
         uint256 batchSize
-    ) internal virtual override(ERC721, ERC721Enumerable){
+    ) internal virtual override(ERC721){
 
     }
 
-
-
-    // =============================================================
-    //                   TOKEN COUNTING OPERATIONS
-    // =============================================================
-
-    /**
-     * @dev Returns the starting token ID.
-     * To change the starting token ID, please override this function.
-     */
-    function _startTokenId() internal view virtual returns (uint256) {
-        return 0;
-    }
-
-    /**
-     * @dev Returns the next token ID to be minted.
-     */
-    function _nextTokenId() internal view virtual returns (uint256) {
-        return _currentIndex;
-    }
-
-    /**
-     * @dev Returns the total number of tokens in existence.
-     * Burned tokens will reduce the count.
-     * To get the total number of tokens minted, please see {_totalMinted}.
-     */
-    function totalSupply() public view virtual override returns (uint256) {
-        // Counter underflow is impossible as _burnCounter cannot be incremented
-        // more than `_currentIndex - _startTokenId()` times.
-    unchecked {
-        return _currentIndex - _burnCounter - _startTokenId();
-    }
-    }
-
-    /**
-     * @dev Returns the total amount of tokens minted in the contract.
-     */
-    function _totalMinted() internal view virtual returns (uint256) {
-        // Counter underflow is impossible as `_currentIndex` does not decrement,
-        // and it is initialized to `_startTokenId()`.
-    unchecked {
-        return _currentIndex - _startTokenId();
-    }
-    }
-
-    /**
-     * @dev Returns the total number of tokens burned.
-     */
-    function _totalBurned() internal view virtual returns (uint256) {
-        return _burnCounter;
-    }
-
-    // =============================================================
-    //                    ADDRESS DATA OPERATIONS
-    // =============================================================
-
-    /**
-     * @dev Returns the number of tokens in `owner`'s account.
-     */
-    function balanceOf(address owner) public view virtual override(ERC721,IERC721) returns (uint256) {
-        if (owner == address(0)) return 0;
-        return _packedAddressData[owner] & _BITMASK_ADDRESS_DATA_ENTRY;
-    }
-
-    /**
-     * Returns the number of tokens minted by `owner`.
-     */
-    function _numberMinted(address owner) internal view returns (uint256) {
-        return (_packedAddressData[owner] >> _BITPOS_NUMBER_MINTED) & _BITMASK_ADDRESS_DATA_ENTRY;
-    }
-
-    /**
-     * Returns the number of tokens burned by or on behalf of `owner`.
-     */
-    function _numberBurned(address owner) internal view returns (uint256) {
-        return (_packedAddressData[owner] >> _BITPOS_NUMBER_BURNED) & _BITMASK_ADDRESS_DATA_ENTRY;
-    }
 
 
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(ERC721, AccessControl,ERC721Enumerable)
+    override(ERC721, AccessControl)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);

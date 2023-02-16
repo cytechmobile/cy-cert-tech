@@ -95,7 +95,7 @@ contract CyCertToken is ERC721,ERC721URIStorage, ERC721Enumerable, AccessControl
         uint256 batchSize
     ) internal virtual override(ERC721, ERC721Enumerable){
 
-        }
+    }
 
 
     function tokenURI(uint256 tokenId)
