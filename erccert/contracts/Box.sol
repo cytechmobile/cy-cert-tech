@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract CyCertTokenB is Initializable, OwnableUpgradeable{
+contract Box is Initializable, OwnableUpgradeable{
     struct RoleData {
         mapping(address => bool) members;
         bytes32 adminRole;
@@ -57,14 +57,6 @@ contract CyCertTokenB is Initializable, OwnableUpgradeable{
     /* ERC721 BASE FUNCTIONALITY */
     /*****************************/
 
-    function safeMint(address to, string memory uri) public onlyRole(MINTER_ROLE) {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-        // Add the token ID to the recipient's list of tokens
-        _tokensMinted[to].push(tokenId);
-    }
 
     function getTokensMinted(address recipient) public view returns (uint256[] memory) {
         return _tokensMinted[recipient];

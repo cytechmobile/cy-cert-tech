@@ -30,15 +30,25 @@
   "license": "ISC",
   "devDependencies": {
     "@expo/webpack-config": "^0.17.3",
+    "@nomiclabs/hardhat-ethers": "^2.2.2",
+    "@openzeppelin/contracts-upgradeable": "^4.8.1",
+    "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "css-loader": "^6.7.3",
     "erc721a": "^4.2.3",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.12.7",
     "ts-loader": "^9.4.2"
   },
   "browser": {
     "fs": false,
     "os": false,
     "path": false
-  }
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": []
 }
