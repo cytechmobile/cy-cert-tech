@@ -29,7 +29,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@expo/webpack-config": "^0.17.3",
+    "@expo/webpack-config": "^18.0.1",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
     "@openzeppelin/contracts-upgradeable": "^4.8.1",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
