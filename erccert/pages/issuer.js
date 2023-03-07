@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Web3 from 'web3';
 import {useEffect, useState} from "react";
 import 'bulma/css/bulma.css'
-import configuration from '/build/contracts/CyCertToken.json';
+import configuration from '/build/contracts/CyCertTokenB.json';
 import axios from 'axios';
 
 
@@ -10,7 +10,7 @@ Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.pr
 
 
 const CyCert = () => {
-    const CONTRACT_ADDRESS = configuration.networks['5777'].address;
+    const CONTRACT_ADDRESS = "0xa482Ff80E1041Ab2f58f47Bbf9C58F26Afa45C25";//configuration.networks['5777'].address;
     const CONTRACT_ABI = configuration.abi;
 
 

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@next/font": "13.1.0",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@openzeppelin/contracts": "^4.8.0",
     "alchemy-sdk": "^2.3.1",
     "axios": "^1.2.3",

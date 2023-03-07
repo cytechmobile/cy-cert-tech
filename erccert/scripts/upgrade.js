@@ -1,6 +1,6 @@
 async function main() {
     const Box = await ethers.getContractFactory("Box")
-    let box = await upgrades.upgradeProxy("0x23472fFf6377EfEF528A88ae4734e782b463a9B0", Box)
+    let box = await upgrades.upgradeProxy("0xB9C2C1D60DbFC0BeC67eEedD5D29154e4B7e47Ec", Box)
     console.log("Your upgraded proxy is done!", box.address)
 }
 
