@@ -32,7 +32,7 @@
   "devDependencies": {
     "@expo/webpack-config": "^0.17.3",
     "@nomiclabs/hardhat-ethers": "^2.2.2",
-    "@openzeppelin/contracts-upgradeable": "^4.8.1",
+    "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
